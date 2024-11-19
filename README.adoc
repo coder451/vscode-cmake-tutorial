@@ -1,0 +1,52 @@
+= VSCode with CMake Tutorial
+
+This https://learn.microsoft.com/en-us/vcpkg/get_started/get-started-vscode[tutorial].
+
+It is about using find_package with the packager vcpkg.
+It doesn't work as described.
+
+This did not work when done on Windows exactly as described.
+
+It was necessary to use the header-only version.
+
+It failed with an undefined reference to this, 
+demangled https://demangler.com/[here].
+
+[source,c++]
+----
+__imp_fmt::v11::vprint(fmt::v11::basic_string_view<char>, fmt::v11::basic_format_args<fmt::v11::context>)
+__imp_fmt::v11::detail::vprint_mojibake(_iobuf*, fmt::v11::basic_string_view<char>, fmt::v11::basic_format_args<fmt::v11::context>, bool)
+----
+
+This obviously means that the library was not linked.
+
+.Linker output
+----
+C:\WINDOWS\system32\cmd.exe /C "cd . && \
+C:\msys64\ucrt64\bin\c++.exe   \
+CMakeFiles/HelloWorld.dir/helloworld.cpp.obj \
+-o HelloWorld.exe \
+-Wl,--out-implib,libHelloWorld.dll.a \
+-Wl,--major-image-version,0,--minor-image-version,0  \
+vcpkg_installed/x64-windows/debug/lib/fmtd.lib  \
+-lkernel32 -luser32 -lgdi32 -lwinspool -lshell32 -lole32 -loleaut32 -luuid -lcomdlg32 -ladvapi32 \
+&& 
+C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\perma\dev\src\learn-cmake\vscode-cmake-tutorial\helloworld\build && \
+"C:\Program Files\PowerShell\7\pwsh.exe" \
+-noprofile -executionpolicy Bypass \
+-file C:/Users/perma/dev/src/vcpkg/scripts/buildsystems/msbuild/applocal.ps1 \
+-targetBinary C:/Users/perma/dev/src/learn-cmake/vscode-cmake-tutorial/helloworld/build/HelloWorld.exe \
+-installedDir C:/Users/perma/dev/src/learn-cmake/vscode-cmake-tutorial/helloworld/build/vcpkg_installed/x64-windows/bin -OutVariable out""
+
+C:/msys64/ucrt64/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: \
+CMakeFiles/HelloWorld.dir/helloworld.cpp.obj:helloworld.cpp: \
+(.text$_ZN3fmt3v115printIJEEEvNS0_19basic_format_stringIcJDpNS0_13type_identityIT_E4typeEEEEDpOS4_[_ZN3fmt3v115printIJEEEvNS0_19basic_format_stringIcJDpNS0_13type_identityIT_E4typeEEEEDpOS4_]+0x4f): \
+undefined reference to `__imp__ZN3fmt3v116vprintENS0_17basic_string_viewIcEENS0_17basic_format_argsINS0_7contextEEE'
+
+C:/msys64/ucrt64/bin/../lib/gcc/x86_64-w64-mingw32/14.2.0/../../../../x86_64-w64-mingw32/bin/ld.exe: \
+CMakeFiles/HelloWorld.dir/helloworld.cpp.obj:helloworld.cpp:(.text$_ZN3fmt3v115printIJEEEvNS0_19basic_format_stringIcJDpNS0_13type_identityIT_E4typeEEEEDpOS4_[_ZN3fmt3v115printIJEEEvNS0_19basic_format_stringIcJDpNS0_13type_identityIT_E4typeEEEEDpOS4_]+0x9c): \
+undefined reference to `__imp__ZN3fmt3v116detail15vprint_mojibakeEP6_iobufNS0_17basic_string_viewIcEENS0_17basic_format_argsINS0_7contextEEEb'
+collect2.exe: error: ld returned 1 exit status
+ninja: build stopped: subcommand failed.
+----
+
